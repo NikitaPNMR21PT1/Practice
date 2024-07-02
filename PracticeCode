@@ -1,0 +1,393 @@
+#include <iostream>
+#include <string>
+#include <fstream>
+#include <cstdio>
+using namespace std;
+
+bool Authorization(int M)
+{
+	int a = 3;
+	bool check = false;
+	string Login, Password;
+	string CorLogin, CorPassword;
+	do {
+		cout << "Введите логин: ";
+		cin >> Login;
+		cout << "Введите пароль: ";
+		cin >> Password;
+		if (M == 1) {
+			ifstream Auth("D:\\PNMR\\Admin\\" + Login + ".txt");
+			if (Auth.is_open())
+			{
+				getline(Auth, CorLogin);
+				getline(Auth, CorPassword);
+				Auth.close();
+				if ((Login == CorLogin) && (Password == CorPassword)) {
+					check = true;
+					cout << "Аутентификация для " + Login + " выполнена успешно!" << endl;
+				}
+				else {
+					check = false;
+					cout << "Ошибка: Введены неверно логин и/или пароль!" << endl;
+				}
+			}
+			else {
+				check = false;
+				cout << "Ошибка: Введены неверно логин и/или пароль!" << endl;
+			}
+		}
+		else if (M == 2)
+		{
+			string line;
+			ifstream Prov("D:\\PNMR\\LockAndUnlock.txt");
+			while (getline(Prov, line)) {
+				if ((line.find(Login) != string::npos)) {
+					check = false;
+					cout << "Данная учетная запись заблокирована!" << endl;
+					return check;
+				}
+			}
+			Prov.close();
+			ifstream Auth("D:\\PNMR\\Users\\" + Login + ".txt");
+			if (Auth.is_open())
+			{
+				getline(Auth, CorLogin);
+				getline(Auth, CorPassword);
+				Auth.close();
+				if ((Login == CorLogin) && (Password == CorPassword)) {
+					check = true;
+					cout << "Аутентификация для " + Login + " выполнена успешно!" << endl;
+				}
+				else {
+					check = false;
+					cout << "Ошибка: Введены неверно логин и/или пароль!" << endl;
+				}
+			}
+			else {
+				check = false;
+				cout << "Ошибка: Введены неверно логин и/или пароль!" << endl;
+			}
+		}
+		a--;
+		if (a == 0) {
+			ofstream NewLock("D:\\PNMR\\LockAndUnlock.txt", ios_base::app);
+			NewLock << Login << endl;
+			NewLock.close();
+			cout << "Учетная запись была заблокирована!!!" << endl;
+			return false;
+		}
+	} while (check != true);
+	return check;
+}
+
+void CreatingUser()
+{
+	string NewLogin, NewPassword;
+	cout << "Введите логин для нового пользователя: ";
+	cin >> NewLogin;
+	cout << "Введите пароль для нового пользователя: ";
+	cin >> NewPassword;
+	ofstream NewUser("D:\\PNMR\\Users\\" + NewLogin + ".txt");
+	NewUser << NewLogin << endl;
+	NewUser << NewPassword << endl;
+	NewUser.close();
+	cout << "Новый пользователь " + NewLogin + " успешно создан!" << endl;
+}
+
+void DeleteUser()
+{
+	string Login1;
+	cout << "Введите логин удаляемого пользователя: ";
+	cin >> Login1;
+	string filePath = "D:\\PNMR\\Users\\" + Login1 + ".txt";
+	if (remove(filePath.c_str()) != 0)
+		cout << "Ошибка: Пользователя с таким логином не существует!" << endl;
+	else
+		cout << "Пользователь успешно удален!" << endl;
+}
+
+void LockUser()
+{
+	string Login2;
+	cout << "Введите логин блокируемого пользователя: ";
+	cin >> Login2;
+	ifstream LUser("D:\\PNMR\\Users\\" + Login2 + ".txt");
+	if (LUser.is_open()) {
+		ofstream Lock("D:\\PNMR\\LockAndUnlock.txt", ios_base::app);
+		Lock << Login2 << endl;
+		Lock.close();
+		cout << "Пользователь успешно заблокирован!" << endl;
+	}
+	else {
+		cout << "Ошибка: Пользователя с таким логином не существует!" << endl;
+	}
+	LUser.close();
+}
+
+void UnlockUser()
+{
+	string Login3;
+	cout << "Введите логин разблокируемого пользователя: ";
+	cin >> Login3;
+	string path = "D:\\PNMR\\Users\\" + Login3 + ".txt";
+	ifstream UnUser(path);
+	if (UnUser.is_open()) {
+		ifstream Unlock("D:\\PNMR\\LockAndUnlock.txt");
+		string line, LineFileText;
+		int i = 0, number_line = 0;
+		while (getline(Unlock, line)) {
+			i++;
+			if (line.find(Login3) != string::npos) {
+				number_line = i;
+			}
+		}
+		Unlock.clear();
+		Unlock.seekg(0);
+		i = 0;
+		while (getline(Unlock, line)) {
+			i++;
+			if (i != number_line) {
+				LineFileText += line + "\r\n";
+			}
+		}
+		Unlock.close();
+		ofstream NewUnUser("D:\\PNMR\\LockAndUnlock.txt", ios::trunc | ios::binary);
+		NewUnUser.write(LineFileText.c_str(), LineFileText.size());
+		NewUnUser.close();
+		cout << "Пользователь успешно разблокирован!" << endl;
+	}
+	else {
+		cout << "Ошибка: Пользователя с таким логином не существует!" << endl;
+	}
+	UnUser.close();
+}
+void ReadFiles()
+{
+    ifstream TextFile("D:\\PNMR\\Practice.txt");
+    if (TextFile.is_open()) {
+        string line;
+        while (getline(TextFile, line))
+        {
+            cout << line << endl;
+        }
+        TextFile.close();
+    }
+    else {
+        cout << "Ошибка открытия файла!" << endl;
+    }
+}
+
+void WriteFile()
+{
+    ofstream TextFile("D:\\PNMR\\Practice.txt", ios_base::app);
+    if (TextFile.is_open()) {
+        string text;
+        cout << "Введите текст для записи в файл:" << endl;
+        cin.ignore();
+        getline(cin, text);
+        TextFile << text << endl;
+        TextFile.close();
+        cout << "Текст дописан в файл!" << endl;
+    }
+    else {
+        cout << "Ошибка открытия файла!" << endl;
+    }
+}
+
+void CopyFiles() {
+    cout << "Введите путь к файлу для копирования: ";
+    string path1;
+    cin >> path1;
+    cout << "Введите название файла: ";
+    string NameFiles;
+    cin >> NameFiles;
+    string FullNameFile = path1 + NameFiles;
+    cout << FullNameFile << endl;
+    ifstream File1(FullNameFile);
+    if (File1.is_open())
+    {
+        cout << "Введите новый путь: ";
+        string path2;
+        cin >> path2;
+        string FullNewNameFile = path2 + NameFiles;
+        ofstream File2(FullNewNameFile);
+        if (File2.is_open()) {
+            File2 << File1.rdbuf();
+            File1.close();
+            File2.close();
+            cout << "Файл успешно скопирован!" << endl;
+        }
+        else {
+            cout << "Ошибка при создании нового файла!" << endl;
+        }
+    }
+    else {
+        cout << "Указанного файла не существует!" << endl;
+    }
+}
+
+void MovingFiles() {
+    cout << "Введите путь к файлу для перемещения: ";
+    string path1;
+    cin >> path1;
+    cout << "Введите название файла: ";
+    string NameFiles;
+    cin >> NameFiles;
+    string FullNameFile = path1 + NameFiles;
+    cout << FullNameFile << endl;
+    ifstream File1(FullNameFile);
+    if (File1.is_open())
+    {
+        cout << "Введите новый путь: ";
+        string path2;
+        cin >> path2;
+        string FullNewNameFile = path2 + NameFiles;
+        ofstream File2(FullNewNameFile);
+        if (File2.is_open()) {
+            File2 << File1.rdbuf();
+            File1.close();
+            File2.close();
+            if (remove(FullNameFile.c_str()) == 0) {
+                cout << "Файл успешно перемещен!" << endl;
+            }
+            else {
+                cout << "Ошибка при удалении исходного файла!" << endl;
+            }
+        }
+        else {
+            cout << "Ошибка при создании нового файла!" << endl;
+        }
+    }
+    else {
+        cout << "Указанного файла не существует!" << endl;
+    }
+}
+
+int main()
+{
+    setlocale(LC_ALL, "");
+    int AdminOrUser = 0;
+    int mode = 0;
+    bool check = false;
+    do {
+        cout << "За кого вы хотите выполнить вход?\n1.Администратор\n2.Пользователь\n3.Выход\nВыберите действие: ";
+        cin >> AdminOrUser;
+        switch (AdminOrUser)
+        {
+        case 1:
+            if (Authorization(AdminOrUser)) {
+                cout << "Вы выполнили вход с правами администратора" << endl;
+                do {
+                    cout << "Меню:\n1.Создание и удаление\n2.Блокирование и разблокирование\n3.Выход\nВыберите действие: ";
+                    cin >> mode;
+                    switch (mode)
+                    {
+                    case 1:
+                    {
+                        cout << "Создание и удаление" << endl;
+                        int subMode = 0;
+                        cout << "Меню:\n1.Создание пользователя\n2.Удаление пользователя\nВыберите действие: ";
+                        cin >> subMode;
+                        switch (subMode)
+                        {
+                        case 1:
+                            CreatingUser();
+                            break;
+                        case 2:
+                            DeleteUser();
+                            break;
+                        default:
+                            cout << "Ошибка: Данной операции не существует!" << endl;
+                            break;
+                        }
+                    }
+                    break;
+                    case 2:
+                        cout << "Блокирование и разблокирование" << endl;
+                        {
+                            int mode2;
+                            cout << "Меню:\n1.Блокирование пользователя\n2.Разблокирование пользователя\nВыберите действие: ";
+                            cin >> mode2;
+                            switch (mode2)
+                            {
+                            case 1:
+                                LockUser();
+                                break;
+                            case 2:
+                                UnlockUser();
+                                break;
+                            default:
+                                cout << "Ошибка: Данной операции не существует!" << endl;
+                                break;
+                            }
+                        }
+                        break;
+                    case 3:
+                        cout << "Выход из учетной записи" << endl;
+                        break;
+                    default:
+                        cout << "Ошибка: Данной операции не существует, повторите попытку!" << endl;
+                        break;
+                    }
+                } while (mode != 3);
+            }
+            break;
+        case 2:
+            if (Authorization(AdminOrUser)) {
+                cout << "Вы выполнили вход с правами пользователя" << endl;
+                int ModeUser;
+                do {
+                    cout << "Меню:\n1.Чтение и запись\n2.Копирование и Перемещение\n3.Выход\nВыберите действие: ";
+                    cin >> ModeUser;
+                    switch (ModeUser) {
+                    case 1:
+                        cout << "Меню:\n1.Чтение\n2.Запись\nВыберите действие: ";
+                        int ModeUser1;
+                        cin >> ModeUser1;
+                        switch (ModeUser1) {
+                        case 1:
+                            ReadFiles();
+                            break;
+                        case 2:
+                            WriteFile();
+                            break;
+                        default:
+                            cout << "Ошибка: Данной операции не существует, повторите попытку!" << endl;
+                            break;
+                        }
+                        break;
+                    case 2:
+                        int ModeUser2;
+                        cout << "Меню:\n1.Копирование\n2.Перемещение\nВыберите действие: ";
+                        cin >> ModeUser2;
+                        switch (ModeUser2) {
+                        case 1:
+                            CopyFiles();
+                            break;
+                        case 2:
+                            MovingFiles();
+                            break;
+                        default:
+                            cout << "Ошибка: Данной операции не существует, повторите попытку!" << endl;
+                            break;
+                        }
+                        break;
+                    case 3:
+                        break;
+                    default:
+                        cout << "Ошибка: Данной операции не существует, повторите попытку!" << endl;
+                        break;
+                    }
+                } while (ModeUser != 3);
+            }
+            break;
+        case 3:
+            cout << "Выполнение отключения ..." << endl;
+            return 0;
+        default:
+            cout << "Ошибка: Данной операции не существует, повторите попытку!" << endl;
+            break;
+        }
+    } while (AdminOrUser != 3);
+    return 0;
+}
